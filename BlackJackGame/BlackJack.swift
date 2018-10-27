@@ -44,18 +44,48 @@ class BlackJack: NSObject {
 //    }
 
     var playerCards: Array<[String:Int]> = [["0": 0]]
+    
     var dillerCards: Array<[String:Int]> = [["0": 0]]
+    
     var playerPoints = 0
+    
     var dillerPoints = 0
     
-    func start() {
+    var response = ""
+    
+    func start() -> String {
+        self.shuffle()
         playerCards.removeAll()
         dillerCards.removeAll()
         playerCards.append(deskOfCards.removeFirst())
         playerCards.append(deskOfCards.removeFirst())
         dillerCards.append(deskOfCards.removeFirst())
         dillerCards.append(deskOfCards.removeFirst())
+        self.showCards(self.playerCards)
+        self.countPlayerPoints()
+        self.countDillerPoints()
+        self.response = self.checkState()
+        if self.response != "" {return self.response}
+        
+        
+        // второй круг
+        
+        if self.playerPoints != 21 && self.dillerPoints != 21 {
+            if self.playerPoints <= 17 {
+                self.secondRingAction(choose:"Give")
+            } else  {
+                self.secondRingAction(choose:"Skip")}
+            
     }
+        self.countPlayerPointsFinal()
+        self.countDillerPointsFinal()
+        self.response = self.checkWinner()
+        showCards(dillerCards)
+        showCards(playerCards)
+        return response
+    }
+    
+    
     func countPlayerPoints() ->Int {
         playerPoints = 0
         
@@ -68,6 +98,7 @@ class BlackJack: NSObject {
         print("Сумма очков игрока: \(playerPoints)")
         return(playerPoints)
     }
+    
     func countDillerPoints() -> Int{
         dillerPoints = 0
         for i in 0..<dillerCards.count {
@@ -81,6 +112,7 @@ class BlackJack: NSObject {
         print("Сумма очков диллера: \(dillerPoints)")
         return (dillerPoints)
     }
+    
 
     func countPoints(_ target: Array <[String:Int]>) -> Int{
         var res = 0
@@ -105,17 +137,28 @@ class BlackJack: NSObject {
     }
         print(cards)
     }
-    func checkState() {
-        if countPlayerPoints() == 21 || countDillerPoints() > 21 {
-            print("Игрок победил")
+    
+    func checkState() -> String {
+        var res = ""
+        if countPlayerPoints() == 21 && countDillerPoints() == 21 {
+           res = "Ничья"
+           
         }
-        if countDillerPoints() == 21 || countPlayerPoints() > 21 {
-            print("Диллер победил")
+        if countPlayerPoints() == 21 {
+            res = "Игрок победил"
+            
         }
-        
-        
+        if countDillerPoints() == 21 {
+            res = "Диллер победил"
+        }
+    
+     return res
     }
-    func secondRingPlayerChoose(choose: String) {
+    
+        
+    
+    
+    func secondRingAction(choose: String) {
         if choose == "Skip"{
            print("Игрок пропускает ход")
             
@@ -125,15 +168,29 @@ class BlackJack: NSObject {
             print("Игроку добавлена карта" )
             //countPlayerPoints()
             showCards(playerCards)
+            if playerPoints > 21 {print("Диллер победил")
+                return
+            }
            // countPlayerPoints()
         }
         if choose == "Opencards" {
            checkState()
         }
+        if dillerPoints <= 17 {
+            dillerCards.append(deskOfCards.removeFirst())
+            print("Диллеру добавлена карта")
+            showCards(dillerCards) }
+        
+            if playerPoints > 21 {print("Игрок победил")
+                return
+        }
+            // countDillerPoints()
+        
         
         
         
     }
+    
     func secondRingDillerStep() {
         if dillerPoints <= 17 {
             dillerCards.append(deskOfCards.removeFirst())
@@ -141,6 +198,55 @@ class BlackJack: NSObject {
             showCards(dillerCards)
            // countDillerPoints()
         }
+    }
+    
+    func countPlayerPointsFinal() {
+        var v = 0
+        if playerCards.count == 3 {
+            for (_,value) in playerCards[2] {
+                v = value
+            }
+        }
+        if v == 11 && playerPoints + 11 > 21 {
+            playerPoints+=1
+        } else {
+            playerPoints+=v
+        }
+        print("Всего очков у игрока \(playerPoints)")
+    }
+    
+    func countDillerPointsFinal() {
+        var v = 0
+        if dillerCards.count == 3 {
+            for (_,value) in dillerCards[2] {
+                v = value
+            }
+        }
+        if v == 11 && dillerPoints + 11 > 21 {
+            dillerPoints+=1
+        } else {
+            dillerPoints+=v
+        }
+        print("Всего очков у диллера \(dillerPoints)")
+    }
+    
+    
+    
+    func checkWinner() -> String {
+        var fres = ""
+        
+        if playerPoints == dillerPoints  {
+            fres = "Ничья"
+            
+        }
+        if (dillerPoints > 21 || playerPoints > dillerPoints) && playerPoints <= 21 {
+            fres = "Победил игрок"
+        }
+        if (playerPoints > 21 || dillerPoints > playerPoints ) && dillerPoints <= 21 {
+            fres = "Победил диллер"
+        }
+       
+        return fres
     }
     
     
